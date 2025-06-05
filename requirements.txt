@@ -2,3 +2,5 @@ pygame>=2.1.0
 fastapi
 requests
 uvicorn
+pytest
+httpx
