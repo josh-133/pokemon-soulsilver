@@ -1,1 +1,7 @@
 pygame>=2.1.0
+fastapi
+requests
+uvicorn
+pytest
+httpx
+-e . # installs codebase in editable mode, using the setup.py
