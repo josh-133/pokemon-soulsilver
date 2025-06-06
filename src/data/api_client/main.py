@@ -37,8 +37,8 @@ def load_all_pokemon():
         return pokemon_list
     except requests.exceptions.RequestException:
         raise HTTPException(status_code=500, detail="Error fetching data")
-    except Exception:
-        raise HTTPException(status_code=404, detail="Pokemon not found")
+    # except Exception:
+    #     raise HTTPException(status_code=404, detail="Pokemon not found")
     
 @app.get("/load/all_moves")
 def load_all_moves():
