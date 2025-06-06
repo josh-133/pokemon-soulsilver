@@ -1,0 +1,10 @@
+README.md
+setup.py
+src/pokemon_soulsilver.egg-info/PKG-INFO
+src/pokemon_soulsilver.egg-info/SOURCES.txt
+src/pokemon_soulsilver.egg-info/dependency_links.txt
+src/pokemon_soulsilver.egg-info/top_level.txt
+tests/test_ai.py
+tests/test_battle.py
+tests/test_data.py
+tests/test_pokemon.py
