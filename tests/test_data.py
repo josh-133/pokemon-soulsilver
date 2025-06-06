@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from ..src.data.api_client.main import app
+from data.api_client.main import app
 
 def test_get_pokemon_data():
     client = TestClient(app)
