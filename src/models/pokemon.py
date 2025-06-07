@@ -17,7 +17,6 @@ class Pokemon:
 
         self.stats = self.calculate_stats()
         self.battle_stats = BattleStats(self.stats)
-        self.current_hp = self.stats["hp"]
 
     def generate_random_iv(self):
         return {
@@ -57,12 +56,12 @@ class Pokemon:
             "sp_defense": calc("sp_defense"),
             "speed": calc("speed"),
         }
-
+    
     def is_fainted(self):
-        return self.current_hp <= 0
+        return self.battle_stats.is_fainted()
 
     def take_damage(self, amount):
-        self.current_hp = max(0, self.current_hp - amount)
+        self.battle_stats.take_damage(amount)
 
     def heal(self, amount):
-        self.current_hp = min(self.stats["hp"], self.current_hp + amount)
+        self.battle_stats.heal(amount)

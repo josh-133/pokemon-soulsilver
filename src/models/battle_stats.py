@@ -13,6 +13,15 @@ class BattleStats:
         }
         self.stat_modifiers = {stat: 0 for stat in self.battle_stats}
 
+    def is_fainted(self):
+        return self.current_hp <= 0
+
+    def take_damage(self, amount):
+        self.current_hp = max(0, self.current_hp - amount)
+
+    def heal(self, amount):
+        self.current_hp = min(self.max_hp, self.current_hp + amount)
+
     def modify_stat(self, stat_name: str, stat_change: int, ):
         if stat_name not in self.stat_modifiers:
             return
