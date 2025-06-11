@@ -10,11 +10,34 @@ class BattleStats:
             "sp_attack": actual_stats.sp_attack,
             "sp_defense": actual_stats.sp_defense,
             "speed": actual_stats.speed,
+            "accuracy": 0,
+            "evasion": 0,
         }
+        self.status = None
+        self.pp = {}
         self.stat_modifiers = {stat: 0 for stat in self.battle_stats}
 
     def is_fainted(self):
         return self.current_hp <= 0
+    
+    def apply_status(self, condition: str):
+        if self.status is None:
+            self.status = condition
+
+    def set_pp(self, move_name: str, max_pp: int):
+        self.pp[move_name] = max_pp
+
+    def use_pp(self, move_name: str):
+        if self.pp.get(move_name, 0) > 0:
+            self.pp[move_name] -= 1
+        else:
+            raise ValueError(f"No PP left for move {move_name}.")
+        
+    def has_pp(self, move_name: str):
+        return self.pp.get(move_name, 0) > 0
+    
+    def apply_stat_change(self, stat_name: str, amount: int):
+        self.modify_stat(stat_name, amount)
 
     def take_damage(self, amount):
         self.current_hp = max(0, self.current_hp - amount)

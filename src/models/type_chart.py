@@ -159,3 +159,6 @@ TYPE_EFFECTIVENESS = {
     }
 }
 
+def get_type_multiplier(attacking: Type, defending: Type) -> float:
+    return TYPE_EFFECTIVENESS.get(attacking, {}).get(defending, 1.0)
+
