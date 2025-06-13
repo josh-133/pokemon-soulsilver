@@ -14,6 +14,8 @@ class BattleStats:
             "evasion": 0,
         }
         self.status = None
+        self.badly_poisoned = False
+        self.toxic_turns = 0
         self.pp = {}
         self.stat_modifiers = {stat: 0 for stat in self.battle_stats}
 

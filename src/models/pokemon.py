@@ -2,7 +2,7 @@ import random
 
 from .base_stats import BaseStats
 from .battle_stats import BattleStats
-from .ability import Ability
+from .abilities.ability import Ability
 
 class Pokemon:
     def __init__(self, name, ability: Ability, base_stats: BaseStats, types, moves, level, iv, ev):

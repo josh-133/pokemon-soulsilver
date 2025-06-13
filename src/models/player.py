@@ -20,3 +20,7 @@ class Player:
     def switch_to(self, index: int):
         if self.team[index].current_hp > 0:
             self.active_index = index
+            p = self.active_pokemon()
+            if p.battle_stats.status == "poison":
+                p.battle_stats.badly_poisoned = False
+                p.battle_stats.toxic_turns = 0
