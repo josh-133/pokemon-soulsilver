@@ -18,7 +18,8 @@ class Pokemon:
         self.stats = self.calculate_stats()
         self.battle_stats = BattleStats(self.stats)
 
-    def generate_random_iv(self):
+    @staticmethod
+    def generate_random_iv():
         return {
             "hp": random.randint(0, 31),
             "attack": random.randint(0, 31),
@@ -28,7 +29,8 @@ class Pokemon:
             "speed": random.randint(0, 31),
         }
 
-    def generate_default_ev(self):
+    @staticmethod
+    def generate_default_ev():
         return {
             "hp": 0,
             "attack": 0,

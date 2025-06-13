@@ -1,15 +1,17 @@
-from pokemon import Pokemon
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .pokemon import Pokemon
 
 class BattleStats:
-    def __init__(self, actual_stats: Pokemon.stats):
-        self.max_hp = actual_stats.hp
+    def __init__(self, actual_stats: "Pokemon.stats"):
+        self.max_hp = actual_stats["hp"]
         self.current_hp = self.max_hp
         self.battle_stats = {
-            "attack": actual_stats.attack,
-            "defense": actual_stats.defense,
-            "sp_attack": actual_stats.sp_attack,
-            "sp_defense": actual_stats.sp_defense,
-            "speed": actual_stats.speed,
+            "attack": actual_stats["attack"],
+            "defense": actual_stats["defense"],
+            "sp_attack": actual_stats["sp_attack"],
+            "sp_defense": actual_stats["sp_defense"],
+            "speed": actual_stats["speed"],
             "accuracy": 0,
             "evasion": 0,
         }

@@ -1,4 +1,4 @@
-from pokemon import Pokemon
+from .pokemon import Pokemon
 from typing import List
 
 class Player:

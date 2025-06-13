@@ -1,7 +1,7 @@
 from .player import Player
 from .player_action import PlayerAction
 from .item_effects import ITEM_EFFECTS
-from .move import apply_damage
+from .move import Move
 import random
 
 class BattleManager:
@@ -122,7 +122,7 @@ class BattleManager:
             return self.prompt_action_input(prompt_text, valid_options)
 
     def apply_damage(self, attacker, defender, move):
-        damage = apply_damage(move, attacker.active_pokemon(), defender.active_pokemon())
+        damage = Move.apply_damage(move, attacker.active_pokemon(), defender.active_pokemon())
 
         ability = defender.active_pokemon().ability
         if hasattr(ability, "modify_damage"):

@@ -1,6 +1,5 @@
 from .ability import Ability
 import random
-from battle_manager import log
 
 class PoisonPoint(Ability):
     def __init__(self):
@@ -10,4 +9,4 @@ class PoisonPoint(Ability):
         if move.damage_class == "Physical" and random.randint(1, 100) <= 30:
             if attacker.battle_stats.status is None:
                 attacker.battle_stats.apply_status("poison")
-                log(f"{attacker.name} was poisoned by Poison Point!")
+                self.log(f"{attacker.name} was poisoned by Poison Point!")
