@@ -4,4 +4,6 @@ requests
 uvicorn
 pytest
 httpx
+stable-baselines3[extra]
+gymnasium
 -e . # installs codebase in editable mode, using the setup.py
