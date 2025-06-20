@@ -1,22 +1,24 @@
-from pokemon import Pokemon
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .pokemon import Pokemon
 
 class BattleStats:
-    def __init__(self, actual_stats: Pokemon.stats):
-        self.max_hp = actual_stats.hp
+    def __init__(self, pokemon: "Pokemon",):
+        self.max_hp = pokemon.stats["hp"]
         self.current_hp = self.max_hp
         self.battle_stats = {
-            "attack": actual_stats.attack,
-            "defense": actual_stats.defense,
-            "sp_attack": actual_stats.sp_attack,
-            "sp_defense": actual_stats.sp_defense,
-            "speed": actual_stats.speed,
+            "attack": pokemon.stats["attack"],
+            "defense": pokemon.stats["defense"],
+            "sp_attack": pokemon.stats["sp_attack"],
+            "sp_defense": pokemon.stats["sp_defense"],
+            "speed": pokemon.stats["speed"],
             "accuracy": 0,
             "evasion": 0,
         }
         self.status = None
         self.badly_poisoned = False
         self.toxic_turns = 0
-        self.pp = {}
+        self.pp = {move.name: move.pp for move in pokemon.moves}
         self.stat_modifiers = {stat: 0 for stat in self.battle_stats}
 
     def is_fainted(self):
@@ -43,6 +45,7 @@ class BattleStats:
 
     def take_damage(self, amount):
         self.current_hp = max(0, self.current_hp - amount)
+        print(f"{self.current_hp} / {self.max_hp}")
 
     def heal(self, amount):
         self.current_hp = min(self.max_hp, self.current_hp + amount)
