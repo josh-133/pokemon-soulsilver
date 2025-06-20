@@ -20,20 +20,31 @@ class BattleManager:
                 f.write(line + "\n")
 
     def take_turn(self, player_action: PlayerAction, opponent_action: PlayerAction):
+        if self.battle_over:
+            return
         # Determine turn order
         first, second = self.determine_turn_order()
 
+        first_action = player_action if first == self.player else opponent_action
+        second_action = opponent_action if first == self.player else player_action
+
         # execute moves and handle faints if necessary
-        self.execute_move(first, second, player_action if first == self.player else opponent_action)
+        self.execute_move(first, second, first_action.move)
         if (second.active_pokemon().is_fainted()):
             self.handle_faint(second)
-
-        self.execute_move(second, first, opponent_action if first == self.opponent else player_action)
-        if (first.active_pokemon().is_fainted()):
-            self.handle_faint(first)
+            
+            # check if battle is over
+            if self.check_battle_end():
+                return
+        else:
+            self.execute_move(second, first, second_action.move)
+            if (first.active_pokemon().is_fainted()):
+                self.handle_faint(first)
 
         # check if battle is over
-        self.check_battle_end()
+        if self.check_battle_end():
+            return
+
 
     def determine_turn_order(self):
         player_speed = self.player.active_pokemon().battle_stats.get_effective_stat("speed")
@@ -79,9 +90,9 @@ class BattleManager:
 
         self.apply_end_of_turn_status_effects(pokemon_list[1:])       
 
-    def execute_move(self, attacker, defender, move):
+    def execute_move(self, attacker, defender, move: Move):
         if not attacker.active_pokemon().battle_stats.has_pp(move.name):
-            self.log("f{attacker.active_pokemon().name} has no PP left for {move.name}")
+            self.log(f"{attacker.active_pokemon().name} has no PP left for {move.name}")
             return
 
         if move.accuracy is not None:
@@ -138,12 +149,13 @@ class BattleManager:
             damage = damage // 2
             self.log(f"{attacker.active_pokemon().name}'s attack was halved due to burn!")
 
+        self.log(f"{attacker.active_pokemon().name} used {move.name}!")
         defender.active_pokemon().take_damage(damage)
         self.log(f"It dealt {damage} damage to {defender.active_pokemon().name}.")
 
     def handle_faint(self, player):
         if player.active_pokemon().is_fainted():
-            self.log(f"{player.active_pokemon} has fainted!")
+            self.log(f"{player.active_pokemon().name} has fainted!")
 
             if player.has_available_pokemon():
                 if player.is_ai:
@@ -168,3 +180,4 @@ class BattleManager:
     def check_battle_end(self):
         if not self.player.has_available_pokemon() or not self.opponent.has_available_pokemon():
             self.battle_over = True
+            self.log(f"Battle over: {self.battle_over}")

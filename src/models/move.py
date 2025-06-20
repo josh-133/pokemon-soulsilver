@@ -36,31 +36,24 @@ class Move:
 
 
     def apply_damage(self, attacker, defender):
-        self.log(f"{attacker.active_pokemon().name} used {self.name}!")
-
         if self.power is None or self.damage_class == "status":
             return 0
         
         # Get relevant stats
         if self.damage_class == "physical":
             attack = attacker.battle_stats.get_effective_stat("attack")
-            defense = defender.battle_status.get_effective_stat("defense")
+            defense = defender.battle_stats.get_effective_stat("defense")
         else:
             attack = attacker.battle_stats.get_effective_stat("sp_attack")
-            defense = defender.battle_status.get_effective_stat("sp_defense")
+            defense = defender.battle_stats.get_effective_stat("sp_defense")
 
         # Apply STAB bonus
-        stab = 1.5 if self.self_type in attacker.types else 1.0
+        stab = 1.5 if self.move_type in attacker.types else 1.0
 
         # Apply type effectiveness
         type_multiplier = 1.0
         for t in defender.types:
             type_multiplier *= get_type_multiplier(self.move_type, t)
-
-            if type_multiplier >= 2:
-                self.log("It's super effective!")
-            elif type_multiplier < 1:
-                self.log("Not very effective...")
 
         # Calculate final damage
         level = attacker.level

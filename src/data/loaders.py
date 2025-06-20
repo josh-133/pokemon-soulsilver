@@ -1,7 +1,7 @@
 import json
 import os
 from models.move import Move, MoveEffects, HitInfo
-from models.pokemon import Pokemon
+from models.pokemon import Pokemon, load_sprite
 from models.base_stats import BaseStats
 from models.abilities import Static
 from models.types import Type
@@ -72,10 +72,17 @@ def load_pokemon(name: str, move_lookup, level=50):
         speed=data["stats"]["speed"],
     )
 
+    sprites = data["sprites"]
+    front_url = sprites.get["front_default"]
+    back_url = sprites.get["back_default"]
+
+    front_sprite = load_sprite(front_url)
+    back_sprite = load_sprite(back_url)
+
     ability = Static()
 
     default_moves = {
-        "pikachu": ["thunderbolt", "quick attack", "iron tail", "electro ball"],
+        "pikachu": ["thunderbolt", "quick-attack", "iron-tail", "thunder-shock"],
         "charmander": ["ember", "scratch", "growl", "smokescreen"],
         # Add more Pokémon and their moves here
     }
@@ -93,4 +100,6 @@ def load_pokemon(name: str, move_lookup, level=50):
         level=level,
         iv=Pokemon.generate_random_iv(),
         ev=Pokemon.generate_default_ev(),
+        front_sprite=front_sprite,
+        back_sprite=back_sprite,
     )

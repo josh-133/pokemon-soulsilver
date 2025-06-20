@@ -1,8 +1,21 @@
 import random
+import requests
+import io
+import pygame
 
 from .base_stats import BaseStats
 from .battle_stats import BattleStats
 from .abilities.ability import Ability
+
+def load_sprite(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        image_data = response.content
+        return pygame.image.load(io.BytesIO(image_data)).convert_alpha()
+    except Exception as e:
+        print(f"Failed to load sprite from {url}: {e}")
+        return None
 
 class Pokemon:
     def __init__(self, name, ability: Ability, base_stats: BaseStats, types, moves, level, iv, ev):
@@ -14,9 +27,11 @@ class Pokemon:
         self.level = level
         self.iv = iv
         self.ev = ev
-
+        self.front_sprite = None
+        self.back_sprite = None
+        
         self.stats = self.calculate_stats()
-        self.battle_stats = BattleStats(self.stats)
+        self.battle_stats = BattleStats(self)
 
     @staticmethod
     def generate_random_iv():
