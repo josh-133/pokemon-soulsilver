@@ -73,8 +73,8 @@ def load_pokemon(name: str, move_lookup, level=50):
     )
 
     sprites = data["sprites"]
-    front_url = sprites.get["front_default"]
-    back_url = sprites.get["back_default"]
+    front_url = sprites.get("front_default")
+    back_url = sprites.get("back_default")
 
     front_sprite = load_sprite(front_url)
     back_sprite = load_sprite(back_url)

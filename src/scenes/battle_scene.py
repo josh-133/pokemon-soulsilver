@@ -1,4 +1,5 @@
 import pygame
+import time
 from models.player_action import PlayerAction
 from models.type_colouring import TYPE_COLORS
 
@@ -11,7 +12,13 @@ class BattleScene:
         self.ui_state = "main_menu"
         self.fight_button_rect = None
         self.move_buttons = []
+        self.battle_log = []
     
+    def log_message(self, text):
+        self.battle_log.append(text)
+        if len(self.battle_log) > 4:
+            self.battle_log.pop(0)
+
     def handle_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = event.pos
@@ -33,6 +40,16 @@ class BattleScene:
             ai_move = ai_pokemon.moves[0]
             opponent_action = PlayerAction(type="move", move=ai_move)
 
+            self.log_message(f"{self.battle_manager.player.active_pokemon().name} used {self.selected_action.move.name}!")
+            self.draw()
+            pygame.display.flip()
+            time.sleep(1)
+
+            self.log_message(f"{ai_pokemon.name} used {ai_move.name}")
+            self.draw()
+            pygame.display.flip()
+            time.sleep(1)
+
             self.battle_manager.take_turn(self.selected_action, opponent_action)
 
             self.selected_action = None
@@ -52,6 +69,9 @@ class BattleScene:
         self.draw_hp_bar(player_pokemon.battle_stats.current_hp, player_pokemon.stats["hp"], 100, 250)
         self.draw_hp_bar(opponent_pokemon.battle_stats.current_hp, opponent_pokemon.stats["hp"], 500, 150)
         self.fight_button_rect = pygame.Rect(200, 400, 350, 150)
+
+        # Line to separate menu from pokemon battling
+        pygame.draw.line(self.screen, (0, 0, 0), (0, 300), (800, 300), 2)
 
         if self.ui_state == "main_menu":
             pygame.draw.rect(self.screen, (200, 200, 200), self.fight_button_rect)
@@ -88,6 +108,8 @@ class BattleScene:
         if self.battle_manager.battle_over:
             self.draw_text("Battle Over!", 320, 200)
 
+        self.draw_dialogue_box()
+
 
     def draw_pokemon(self, pokemon, x, y, is_player):
         sprite = pokemon.back_sprite if is_player else pokemon.front_sprite
@@ -96,7 +118,7 @@ class BattleScene:
             self.screen.blit(sprite, (x, y))
         else:
             print("RIP NO SPRITE")
-        self.draw_text(pokemon.name, x+10, y+40)
+        self.draw_text(pokemon.name, x + 10, y + 75)
     
     def draw_hp_bar(self, current_hp, max_hp, x, y, width=100, height=10):
         ratio = current_hp / max_hp
@@ -106,3 +128,11 @@ class BattleScene:
     def draw_text(self, text, x, y):
         text_surface = self.font.render(text, True, (0, 0, 0))
         self.screen.blit(text_surface, (x, y))
+
+    def draw_dialogue_box(self):
+        box_rect = pygame.Rect(50, 550, 700, 40)
+        pygame.draw.rect(self.screen, (255, 255, 255), box_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), box_rect, 2)
+
+        if self.battle_log:
+            self.draw_text(self.battle_log[-1], box_rect.x + 10, box_rect.y + 10)

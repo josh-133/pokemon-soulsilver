@@ -18,7 +18,7 @@ def load_sprite(url):
         return None
 
 class Pokemon:
-    def __init__(self, name, ability: Ability, base_stats: BaseStats, types, moves, level, iv, ev):
+    def __init__(self, name, ability: Ability, base_stats: BaseStats, types, moves, level, iv, ev, front_sprite=None, back_sprite=None):
         self.name = name
         self.ability = ability
         self.base_stats = base_stats
@@ -27,8 +27,8 @@ class Pokemon:
         self.level = level
         self.iv = iv
         self.ev = ev
-        self.front_sprite = None
-        self.back_sprite = None
+        self.front_sprite = front_sprite
+        self.back_sprite = back_sprite
         
         self.stats = self.calculate_stats()
         self.battle_stats = BattleStats(self)

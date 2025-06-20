@@ -1,13 +1,13 @@
 pikachu used thunderbolt!
-It dealt 38 damage to charmander.
+It dealt 37 damage to charmander.
 charmander used ember!
-It dealt 21 damage to pikachu.
+It dealt 25 damage to pikachu.
 pikachu used thunderbolt!
-It dealt 38 damage to charmander.
+It dealt 37 damage to charmander.
 charmander used ember!
-It dealt 21 damage to pikachu.
+It dealt 25 damage to pikachu.
 pikachu used thunderbolt!
-It dealt 38 damage to charmander.
+It dealt 37 damage to charmander.
 charmander has fainted!
 Battle over: True
 Battle over: True
