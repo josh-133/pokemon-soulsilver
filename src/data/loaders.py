@@ -45,7 +45,7 @@ def load_move(move_data):
         damage_class = move_data["damage_class"],
         crit_rate = move_data["meta"]["crit_rate"],
         category = move_data["meta"]["category"],
-        move_type = move_data["type"],
+        move_type = Type[move_data["type"].upper()],
         hit_info = hit_info,
         effects_info = effects_info,
     )

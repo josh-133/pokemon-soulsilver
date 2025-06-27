@@ -1,5 +1,6 @@
 import pygame
 import time
+import logging
 from models.player_action import PlayerAction
 from models.type_colouring import TYPE_COLORS
 
@@ -117,7 +118,7 @@ class BattleScene:
         if sprite:
             self.screen.blit(sprite, (x, y))
         else:
-            print("RIP NO SPRITE")
+            logging.info("RIP NO SPRITE")
         self.draw_text(pokemon.name, x + 10, y + 75)
     
     def draw_hp_bar(self, current_hp, max_hp, x, y, width=100, height=10):

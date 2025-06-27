@@ -3,6 +3,7 @@ from .player_action import PlayerAction
 from .item_effects import ITEM_EFFECTS
 from .move import Move
 import random
+import logging
 
 class BattleManager:
     def __init__(self, player: Player, opponent: Player):
@@ -13,11 +14,10 @@ class BattleManager:
 
     def log(self, message: str):
         self.battle_log.append(message)
-        print(message)
-
-        with open("battle_log.txt", "w") as f:
-            for line in self.battle_log:
-                f.write(line + "\n")
+        logging.info(message)
+    
+    def make_ai_action(self, player, move):
+        return PlayerAction(type="move", move=move)
 
     def take_turn(self, player_action: PlayerAction, opponent_action: PlayerAction):
         if self.battle_over:
@@ -78,6 +78,7 @@ class BattleManager:
                 pokemon.battle_stats.toxic_turns += 1
                 turns = pokemon.battle_stats.toxic_turns
                 damage = max(1, (pokemon.battle_stats.max_hp * turns) // 16)
+                pokemon.take_damage(damage)
                 self.log(f"{pokemon.name} is badly poisoned!")
             else:
                 damage = max(1, pokemon.battle_stats.max_hp // 8)
@@ -105,6 +106,7 @@ class BattleManager:
             final_accuracy = move.accuracy * acc_mod / eva_mod
             if random.random() * 100 > final_accuracy:
                 self.log(f"{attacker.active_pokemon().name}'s {move.name} missed!")
+                return 0
         
         # Use PP and apply damage
         attacker.active_pokemon().battle_stats.use_pp(move.name)
@@ -129,8 +131,9 @@ class BattleManager:
     def prompt_action_input(self, prompt_text, valid_options):
         choice = input(prompt_text)
         if choice not in valid_options:
-            print("Invalid choice.")
+            logging.info("Invalid choice.")
             return self.prompt_action_input(prompt_text, valid_options)
+        return choice
 
     def apply_damage(self, attacker, defender, move):
         damage = Move.apply_damage(move, attacker.active_pokemon(), defender.active_pokemon())

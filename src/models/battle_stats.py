@@ -1,3 +1,4 @@
+import logging
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .pokemon import Pokemon
@@ -45,7 +46,7 @@ class BattleStats:
 
     def take_damage(self, amount):
         self.current_hp = max(0, self.current_hp - amount)
-        print(f"{self.current_hp} / {self.max_hp}")
+        logging.info(f"{self.current_hp} / {self.max_hp}")
 
     def heal(self, amount):
         self.current_hp = min(self.max_hp, self.current_hp + amount)
