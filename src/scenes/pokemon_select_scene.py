@@ -1,4 +1,6 @@
 import pygame
+import threading
+import time
 from models.pokemon import load_sprite
 
 class PokemonSelectScene:
@@ -10,11 +12,26 @@ class PokemonSelectScene:
         self.page = 0
         self.page_size = 24
         self.buttons = []
+        self.sprite_cache = {}
+        self.start_background_sprite_loader()
 
         self.prev_button = pygame.Rect(100, 540, 100, 40)
         self.next_button = pygame.Rect(600, 540, 100, 40)
 
         self.generate_buttons()
+
+    def preload_sprites(self):
+        for pokemon in self.pokemon_data:
+            if "sprites" in pokemon and "front_default" in pokemon["sprites"]:
+                sprite_url = pokemon["sprites"]["front_default"]
+
+                if sprite_url not in self.sprite_cache:
+                    sprite = load_sprite(sprite_url)
+                    self.sprite_cache[sprite_url] = sprite
+                    time.sleep(0.01)
+    
+    def start_background_sprite_loader(self):
+        threading.Thread(target=self.preload_sprites, daemon=True).start()
 
 
     def generate_buttons(self):
@@ -40,9 +57,14 @@ class PokemonSelectScene:
             rect = pygame.Rect(x, y, 100, 100)
             sprite = None
 
+             # Load sprite from cache or download if needed
             if "sprites" in pokemon and "front_default" in pokemon["sprites"]:
-                sprite_url = pokemon["sprites"]["front_default"]
-                sprite = load_sprite(sprite_url)
+                url = pokemon["sprites"]["front_default"]
+                if url in self.sprite_cache:
+                    sprite = self.sprite_cache[url]
+                else:
+                    sprite = load_sprite(url)
+                    self.sprite_cache[url] = sprite  # Save for reuse
 
             self.buttons.append((rect, pokemon, sprite))
 
@@ -68,6 +90,11 @@ class PokemonSelectScene:
         pygame.draw.rect(self.screen, (100, 100, 255), self.next_button)
         next_text = self.font.render("Next", True, (255, 255, 255))
         self.screen.blit(next_text, self.next_button.move(25, 5))
+
+        # Page indicator text
+        total_pages = (len(self.pokemon_data) + self.page_size - 1) // self.page_size
+        page_label = self.font.render(f"Page {self.page + 1} / {total_pages}", True, (0, 0, 0))
+        self.screen.blit(page_label, (350, 550))
 
     def handle_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
