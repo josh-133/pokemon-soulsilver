@@ -1,3 +1,7 @@
+# test_agent.py
+# This script evaluates a trained model over multiple simulated battles,
+# logs win/loss statistics, and plots performance metrics.
+
 from stable_baselines3 import PPO
 from ai.pokemon_env import PokemonEnv
 import csv
@@ -5,7 +9,7 @@ import os
 import logging
 import matplotlib.pyplot as plt
 
-model = PPO.load("ai/trained_model_selfplay")
+model = PPO.load("src/ai/trained_model_selfplay")
 
 NUM_BATTLES = 100
 wins = 0
@@ -18,14 +22,15 @@ results = []
 
 for i in range(1, NUM_BATTLES + 1):
     env = PokemonEnv(opponent_model=model)
-    obs = env.reset()
+    obs, _ = env.reset()
     done = False
     turns = 0
 
     while not done:
         turns += 1
         action, _ = model.predict(obs, deterministic=True)
-        obs, reward, done, _ = env.step(action)
+        obs, reward, terminated, truncated, _ = env.step(action)
+        done = terminated or truncated
     
     total_turns += turns
     total_reward += reward

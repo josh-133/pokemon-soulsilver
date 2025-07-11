@@ -52,11 +52,38 @@ def load_move(move_data):
 
     return move
 
-
 MOVE_LOOKUP = {move["name"].lower(): load_move(move) for move in MOVES_DATA}
 
 def get_move_lookup():
     return MOVE_LOOKUP
+
+
+def extract_level_up_moves(pokemon_data, move_lookup, level=50, version_group="heartgold-soulsilver"):
+    selected_moves = []
+    
+    for move_entry in pokemon_data["moves"]:
+        move_name = move_entry["move"]["name"]
+
+        for detail in move_entry["version_group_details"]:
+            method = detail["move_learn_method"]["name"]
+            version = detail["version_group"]["name"]
+            learned_at = detail["level_learned_at"]
+
+            is_level_up = method == "level-up"
+            is_valid_version = version == version_group
+            is_valid_level = learned_at <= level
+
+            print(f"move: {move_name}")
+            print(f"- version: {version}")
+            print(f"- level: {learned_at}")
+            print(f"-> is_level_up: {is_level_up}, is_valid_version: {is_valid_version}, is_valid_level: {is_valid_level}")
+
+            if is_level_up and is_valid_version and is_valid_level:
+                move_obj = move_lookup.get(move_name)
+                if move_obj and move_obj not in selected_moves:
+                    selected_moves.append(move_obj)
+    
+    return selected_moves[:4]
 
 def load_pokemon(name: str, move_lookup, level=50):
     data = next((p for p in POKEMON_DATA if p["name"].lower() == name.lower()), None)
@@ -81,15 +108,10 @@ def load_pokemon(name: str, move_lookup, level=50):
 
     ability = Static()
 
-    default_moves = {
-        "pikachu": ["thunderbolt", "quick-attack", "iron-tail", "thunder-shock"],
-        "charmander": ["ember", "scratch", "growl", "smokescreen"],
-        # Add more Pokémon and their moves here
-    }
-
     types = [Type[t.upper()] for t in data["types"]]
-    move_names = default_moves.get(name.lower(), [])[:4]
-    moves = [move_lookup[m.lower()] for m in move_names if m.lower() in move_lookup]
+    moves = extract_level_up_moves(pokemon_data=data, move_lookup=move_lookup, level=50, version_group="heartgold-soulsilver")
+
+    print(moves)
 
     return Pokemon(
         name=data["name"],

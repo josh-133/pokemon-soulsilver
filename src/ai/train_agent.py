@@ -23,7 +23,7 @@ self_play_env = DummyVecEnv([lambda: PokemonEnv(opponent_model=model)])
 model.set_env(self_play_env)
 model.learn(total_timesteps=100_000)
 
-model.save("ai/trained_model_selfplay")
+model.save("src/ai/trained_model_selfplay")
 
 logging.info("Training complete. Model saved to ai/trained_model_selfplay.zip")
 
@@ -56,7 +56,6 @@ while not done:
     logging.info(f"{opponent.name} dealt {damage_to_player} damage to {player.name}")
     logging.info(f"Status: {player.name} HP = {player.battle_stats.current_hp}, {opponent.name} HP = {opponent.battle_stats.current_hp}")
 
-    logging.info("\n Battle ended!")
     if reward > 0:
         logging.info("Agent won the battle!")
     elif reward < 0:

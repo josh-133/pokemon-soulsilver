@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 import requests
-from .save_utils import save_json
+from data.api_client.save_utils import save_json
 
 # start app
 app = FastAPI()
@@ -21,6 +21,7 @@ def load_all_pokemon():
             cleaned_data = {
                 "id": pokemon_data["id"],
                 "name": pokemon_data["name"],
+                "moves": pokemon_data["moves"],
                 "abilities": pokemon_data["abilities"],
                 "sprites": pokemon_data["sprites"]["versions"]["generation-iv"]["heartgold-soulsilver"],
                 "stats": {
