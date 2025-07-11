@@ -7,19 +7,30 @@ class PokemonSelectScene:
         self.pokemon_data = pokemon_data[:493]
         self.on_select_callback = on_select_callback
         self.font = pygame.font.SysFont("arial", 16)
+        self.page = 0
+        self.page_size = 24
         self.buttons = []
+
+        self.prev_button = pygame.Rect(100, 540, 100, 40)
+        self.next_button = pygame.Rect(600, 540, 100, 40)
 
         self.generate_buttons()
 
 
     def generate_buttons(self):
+        self.buttons = []
+
         columns = 6
         spacing_x = 130
         spacing_y = 130
         start_x = 40
         start_y = 40
 
-        for idx, pokemon in enumerate(self.pokemon_data[:60]):
+        start_index = self.page * self.page_size
+        end_index = start_index + self.page_size
+        current_pokemon = self.pokemon_data[start_index:end_index]
+
+        for idx, pokemon in enumerate(current_pokemon):
             col = idx % columns
             row = idx // columns
 
@@ -49,9 +60,32 @@ class PokemonSelectScene:
             name_rect = name_surface.get_rect(center=(rect.centerx, rect.y + 80))
             self.screen.blit(name_surface, name_rect)   
 
+         # Draw navigation buttons
+        pygame.draw.rect(self.screen, (100, 100, 255), self.prev_button)
+        prev_text = self.font.render("Previous", True, (255, 255, 255))
+        self.screen.blit(prev_text, self.prev_button.move(10, 5))
+
+        pygame.draw.rect(self.screen, (100, 100, 255), self.next_button)
+        next_text = self.font.render("Next", True, (255, 255, 255))
+        self.screen.blit(next_text, self.next_button.move(25, 5))
+
     def handle_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = event.pos
+
+            if self.prev_button.collidepoint(pos) and self.page > 0:
+                self.page -= 1
+                self.generate_buttons()
+
+            elif self.next_button.collidepoint(pos):
+                if (self.page + 1) * self.page_size < len(self.pokemon_data):
+                    self.page += 1
+                    self.generate_buttons()
+
+            else:
+                for rect, pokemon, _ in self.buttons:
+                    if rect.collidepoint(pos):
+                        self.on_select_callback(pokemon)
 
             for rect, pokemon, _ in self.buttons:
                 if rect.collidepoint(pos):
