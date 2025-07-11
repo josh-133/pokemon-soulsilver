@@ -1,5 +1,6 @@
 import pygame
 import time
+import logging
 from models.player_action import PlayerAction
 from models.type_colouring import TYPE_COLORS
 
@@ -10,7 +11,7 @@ class BattleScene:
         self.selected_action = None
         self.font = pygame.font.SysFont("arial", 20)
         self.ui_state = "main_menu"
-        self.fight_button_rect = None
+        self.fight_button_rect = pygame.Rect(200, 400, 350, 150)
         self.move_buttons = []
         self.battle_log = []
     
@@ -20,6 +21,8 @@ class BattleScene:
             self.battle_log.pop(0)
 
     def handle_input(self, event):
+        if self.battle_manager.battle_over:
+            return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = event.pos
             
@@ -94,7 +97,7 @@ class BattleScene:
                 x = start_x + col * (button_width + padding)
                 y = start_y + row * (button_height + padding)
 
-                move_type = move.move_type.lower()
+                move_type = move.move_type.value.lower()
                 colour = TYPE_COLORS.get(move_type, (180, 180, 180))
 
                 rect = pygame.Rect(x, y, button_width, button_height)
@@ -117,7 +120,7 @@ class BattleScene:
         if sprite:
             self.screen.blit(sprite, (x, y))
         else:
-            print("RIP NO SPRITE")
+            logging.info("RIP NO SPRITE")
         self.draw_text(pokemon.name, x + 10, y + 75)
     
     def draw_hp_bar(self, current_hp, max_hp, x, y, width=100, height=10):

@@ -1,5 +1,6 @@
 from models.type_chart import get_type_multiplier
 from models.types import Type
+import logging
 
 class HitInfo:
     def __init__(self, min_hits, max_hits, min_turns, max_turns):
@@ -48,12 +49,15 @@ class Move:
             defense = defender.battle_stats.get_effective_stat("sp_defense")
 
         # Apply STAB bonus
-        stab = 1.5 if self.move_type in attacker.types else 1.0
+        stab = 1.5 if self.move_type in [t.value for t in attacker.types] else 1.0
 
+        logging.info(f"MOVE TYPE: {self.move_type}, ATTACKER TYPES: {attacker.types}")
         # Apply type effectiveness
         type_multiplier = 1.0
         for t in defender.types:
-            type_multiplier *= get_type_multiplier(self.move_type, t)
+            type_effect = get_type_multiplier(self.move_type, t)
+            logging.info(f"{self.move_type} vs {t} = {type_effect}")
+            type_multiplier *= type_effect
 
         # Calculate final damage
         level = attacker.level

@@ -2,19 +2,22 @@ import random
 import requests
 import io
 import pygame
+import logging
 
 from .base_stats import BaseStats
 from .battle_stats import BattleStats
 from .abilities.ability import Ability
 
 def load_sprite(url):
+    if not pygame.display.get_init():
+        return None
     try:
         response = requests.get(url)
         response.raise_for_status()
         image_data = response.content
         return pygame.image.load(io.BytesIO(image_data)).convert_alpha()
     except Exception as e:
-        print(f"Failed to load sprite from {url}: {e}")
+        logging.info(f"Failed to load sprite from {url}: {e}")
         return None
 
 class Pokemon:
