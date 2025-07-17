@@ -11,7 +11,7 @@ class BattleScene:
         self.selected_action = None
         self.font = pygame.font.SysFont("arial", 20)
         self.ui_state = "main_menu"
-        self.fight_button_rect = pygame.Rect(200, 400, 350, 150)
+        self.fight_button_rect = pygame.Rect(200, 400, 650, 150)
         self.move_buttons = []
         self.battle_log = []
     
@@ -66,28 +66,28 @@ class BattleScene:
         player_pokemon = self.battle_manager.player.active_pokemon()
         opponent_pokemon = self.battle_manager.opponent.active_pokemon()
 
-        self.draw_pokemon(player_pokemon, 100, 150, is_player=True)
-        self.draw_pokemon(opponent_pokemon, 500, 50, is_player=False)
+        self.draw_pokemon(player_pokemon, 200, 250, is_player=True)
+        self.draw_pokemon(opponent_pokemon, 1000, 150, is_player=False)
 
-        self.draw_hp_bar(player_pokemon.battle_stats.current_hp, player_pokemon.stats["hp"], 100, 250)
-        self.draw_hp_bar(opponent_pokemon.battle_stats.current_hp, opponent_pokemon.stats["hp"], 500, 150)
-        self.fight_button_rect = pygame.Rect(200, 400, 350, 150)
+        self.draw_hp_bar(player_pokemon.battle_stats.current_hp, player_pokemon.stats["hp"], 200, 350)
+        self.draw_hp_bar(opponent_pokemon.battle_stats.current_hp, opponent_pokemon.stats["hp"], 1000, 250)
+        self.fight_button_rect = pygame.Rect(300, 440, 600, 250)
 
         # Line to separate menu from pokemon battling
-        pygame.draw.line(self.screen, (0, 0, 0), (0, 300), (800, 300), 2)
+        pygame.draw.line(self.screen, (0, 0, 0), (0, 400), (1200, 400), 2)
 
         if self.ui_state == "main_menu":
             pygame.draw.rect(self.screen, (200, 200, 200), self.fight_button_rect)
             pygame.draw.rect(self.screen, (0, 0, 0), self.fight_button_rect, 2)
-            self.draw_text("Fight", 355, 460)
+            self.draw_text("Fight", 570, 575)
 
         if self.ui_state == "move_select":
             self.move_buttons = []
             moves = self.battle_manager.player.active_pokemon().moves
 
-            start_x = 150  # left edge
-            start_y = 400  # top edge
-            button_width = 240
+            start_x = 350  # left edge
+            start_y = 500  # top edge
+            button_width = 250
             button_height = 50
             padding = 20
 
@@ -109,7 +109,7 @@ class BattleScene:
                 self.move_buttons.append(rect)
 
         if self.battle_manager.battle_over:
-            self.draw_text("Battle Over!", 320, 200)
+            self.draw_text("Battle Over!", 560, 300)
 
         self.draw_dialogue_box()
 
@@ -133,7 +133,7 @@ class BattleScene:
         self.screen.blit(text_surface, (x, y))
 
     def draw_dialogue_box(self):
-        box_rect = pygame.Rect(50, 550, 700, 40)
+        box_rect = pygame.Rect(100, 700, 1000, 40)
         pygame.draw.rect(self.screen, (255, 255, 255), box_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), box_rect, 2)
 
