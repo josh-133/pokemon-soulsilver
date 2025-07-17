@@ -33,7 +33,12 @@ def run_game_loop(scene):
 
 def on_pokemon_selected(team_data):
     player = Player("Ash", False, [load_pokemon(p["name"], move_lookup) for p in team_data])
-    opponent = Player("Red", True, [load_pokemon("charizard", move_lookup)])
+
+    # Hard code a team in rn
+    opponent_team_names = ["charizard", "blastoise", "venusaur", "pikachu", "snorlax", "lapras"]
+    opponent_team = [load_pokemon(name, move_lookup) for name in opponent_team_names]
+    opponent = Player("Red", True, opponent_team)
+
     battle_manager = BattleManager(player, opponent)
     scene = BattleScene(screen, battle_manager)
     run_game_loop(scene)
