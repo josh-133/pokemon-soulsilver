@@ -10,13 +10,16 @@ class PokemonSelectScene:
         self.on_select_callback = on_select_callback
         self.font = pygame.font.SysFont("arial", 16)
         self.page = 0
-        self.page_size = 24
+        self.page_size = 45
         self.buttons = []
         self.sprite_cache = {}
         self.start_background_sprite_loader()
 
-        self.prev_button = pygame.Rect(100, 540, 100, 40)
-        self.next_button = pygame.Rect(600, 540, 100, 40)
+        self.selected_team = []
+        self.start_button = pygame.Rect(500, 720, 160, 40)
+
+        self.prev_button = pygame.Rect(300, 720, 100, 40)
+        self.next_button = pygame.Rect(800, 720, 100, 40)
 
         self.generate_buttons()
 
@@ -33,11 +36,10 @@ class PokemonSelectScene:
     def start_background_sprite_loader(self):
         threading.Thread(target=self.preload_sprites, daemon=True).start()
 
-
     def generate_buttons(self):
         self.buttons = []
 
-        columns = 6
+        columns = 9
         spacing_x = 130
         spacing_y = 130
         start_x = 40
@@ -68,9 +70,11 @@ class PokemonSelectScene:
 
             self.buttons.append((rect, pokemon, sprite))
 
-
     def draw(self):
+        # Clear screen
         self.screen.fill((255, 255, 255))
+
+        # Draw pokemon grid
         for rect, pokemon, sprite in self.buttons:
             pygame.draw.rect(self.screen, (200, 200, 200), rect)
 
@@ -82,7 +86,23 @@ class PokemonSelectScene:
             name_rect = name_surface.get_rect(center=(rect.centerx, rect.y + 80))
             self.screen.blit(name_surface, name_rect)   
 
-         # Draw navigation buttons
+            # Highlight selected
+            if pokemon in self.selected_team:
+                pygame.draw.rect(self.screen, (0, 255, 0), rect, 3)
+
+        # Draw team bar
+        pygame.draw.rect(self.screen, (230, 230, 250), (0, 700, 1200, 100))
+        for i, pokemon in enumerate(self.selected_team):
+            name_surface = self.font.render(pokemon["name"].capitalize(), True, (0, 0, 0))
+            self.screen.blit(name_surface, (20 + i * 120, 470))
+
+        # Draw start button
+        pygame.draw.rect(self.screen, (100, 200, 100), self.start_button)
+        button_text = self.font.render("Start battle", True, (255, 255, 255))
+        text_rect = button_text.get_rect(center=self.start_button.center)
+        self.screen.blit(button_text, text_rect)
+
+        # Draw navigation buttons
         pygame.draw.rect(self.screen, (100, 100, 255), self.prev_button)
         prev_text = self.font.render("Previous", True, (255, 255, 255))
         self.screen.blit(prev_text, self.prev_button.move(10, 5))
@@ -94,7 +114,7 @@ class PokemonSelectScene:
         # Page indicator text
         total_pages = (len(self.pokemon_data) + self.page_size - 1) // self.page_size
         page_label = self.font.render(f"Page {self.page + 1} / {total_pages}", True, (0, 0, 0))
-        self.screen.blit(page_label, (350, 550))
+        self.screen.blit(page_label, (540, 780))
 
     def handle_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -104,15 +124,23 @@ class PokemonSelectScene:
                 self.page -= 1
                 self.generate_buttons()
 
-            elif self.next_button.collidepoint(pos):
+            if self.next_button.collidepoint(pos):
                 if (self.page + 1) * self.page_size < len(self.pokemon_data):
                     self.page += 1
                     self.generate_buttons()
 
-            else:
-                for rect, pokemon, _ in self.buttons:
-                    if rect.collidepoint(pos):
-                        self.on_select_callback(pokemon)
+            # Start battle button
+            if self.start_button.collidepoint(pos) and 1 <= len(self.selected_team) <= 6:
+                self.on_select_callback(self.selected_team)
+                return
+        
+            for rect, pokemon, _ in self.buttons:
+                if rect.collidepoint(pos):
+                    if pokemon not in self.selected_team and len(self.selected_team) < 6:
+                        self.selected_team.append(pokemon)
+                    elif pokemon in self.selected_team:
+                        self.selected_team.remove(pokemon)
+                    return
 
             for rect, pokemon, _ in self.buttons:
                 if rect.collidepoint(pos):
