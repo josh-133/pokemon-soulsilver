@@ -10,7 +10,7 @@ class PokemonSelectScene:
         self.on_select_callback = on_select_callback
         self.font = pygame.font.SysFont("arial", 16)
         self.page = 0
-        self.page_size = 45
+        self.page_size = 35
         self.buttons = []
         self.sprite_cache = {}
         self.start_background_sprite_loader()
@@ -39,7 +39,7 @@ class PokemonSelectScene:
     def generate_buttons(self):
         self.buttons = []
 
-        columns = 9
+        columns = 7
         spacing_x = 130
         spacing_y = 130
         start_x = 40
@@ -90,11 +90,27 @@ class PokemonSelectScene:
             if pokemon in self.selected_team:
                 pygame.draw.rect(self.screen, (0, 255, 0), rect, 3)
 
-        # Draw team bar
-        pygame.draw.rect(self.screen, (230, 230, 250), (0, 700, 1200, 100))
-        for i, pokemon in enumerate(self.selected_team):
+        # Draw selected team preview box
+        pygame.draw.rect(self.screen, (230, 230, 250), (950, 40, 190, 650))  # light lavender box
+        pygame.draw.rect(self.screen, (0, 0, 0), (950, 40, 190, 650), 2)  # black border
+
+        team_label = self.font.render("Your Team", True, (0, 0, 0))
+        self.screen.blit(team_label, (1000, 50))
+        
+        for idx, pokemon in enumerate(self.selected_team):
+            y = 150 + idx * 80
+
+            # Draw sprite (if exists)
+            if "sprites" in pokemon and "front_default" in pokemon["sprites"]:
+                sprite = load_sprite(pokemon["sprites"]["front_default"])
+                if sprite:
+                    sprite_rect = sprite.get_rect(center=(1000, y))
+                    self.screen.blit(sprite, sprite_rect)
+
+            # Draw name
             name_surface = self.font.render(pokemon["name"].capitalize(), True, (0, 0, 0))
-            self.screen.blit(name_surface, (20 + i * 120, 470))
+            name_rect = name_surface.get_rect(center=(1000, y + 35))
+            self.screen.blit(name_surface, name_rect)
 
         # Draw start button
         pygame.draw.rect(self.screen, (100, 200, 100), self.start_button)
