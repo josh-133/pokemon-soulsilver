@@ -1,5 +1,6 @@
 from .player import Player
 from .player_action import PlayerAction
+from .type_chart import get_type_multiplier
 from .item_effects import ITEM_EFFECTS
 from .move import Move
 import random
@@ -45,7 +46,23 @@ class BattleManager:
         if self.check_battle_end():
             return
 
+    def choose_best_counter(self, current_opponent_pokemon, player_active_pokemon):
+        best_index = None
+        best_score = float('-inf')
 
+        for i, poke in enumerate(current_opponent_pokemon.team):
+            if poke != current_opponent_pokemon.active_pokemon() and poke.battle_stats.current_hp > 0:
+                # Basic Heuristic: count the number of type advantages
+                score = 0
+                for move in poke.moves:
+                    for player_type in player_active_pokemon.types:
+                        multiplier = get_type_multiplier(move.move_type, player_type)
+                        score += multiplier
+                if score > best_score:
+                    best_score = score
+                    best_index = i
+        return best_index
+    
     def determine_turn_order(self):
         player_speed = self.player.active_pokemon().battle_stats.get_effective_stat("speed")
         opponent_speed = self.opponent.active_pokemon().battle_stats.get_effective_stat("speed")
@@ -162,23 +179,29 @@ class BattleManager:
 
             if player.has_available_pokemon():
                 if player.is_ai:
-                    for i, p in enumerate(player.team):
-                        if not p.is_fainted():
-                            player.switch_to(i)
-                            break
-                        else:
-                            valid_choices = [
-                                (i,p) for i, p in enumerate(player.team)
-                                if not p.is_fainted()
-                            ]
+                    # 🧠 Smart AI switch using type effectiveness
+                    opponent = self.player if player == self.opponent else self.opponent
+                    replacement = self.choose_best_counter(player, opponent.active_pokemon())
+                    if replacement:
+                        player.switch_to(replacement)
+                        self.log(f"{player.name} sent out {player.team[replacement].name}!")
+                else:
+                    # Player manual switch
+                    valid_choices = [(i, p) for i, p in enumerate(player.team) if not p.is_fainted()]
+                    while True:
+                        print("\nYour Pokemon:")
+                        for i, p in valid_choices:
+                            print(f"{i + 1}. {p.name} (HP: {p.current_hp}/{p.stats['hp']})")
 
-                            while True:
-                                choice = int(input("Switch to: ")) - 1
-                                if any(i == choice for i,_ in valid_choices):
-                                    player.switch_to(choice)
-                                    break
-                                else:
-                                    self.log("Invalid choice. Try again.")
+                        try:
+                            choice = int(input("Switch to: ")) - 1
+                            if any(i == choice for i, _ in valid_choices):
+                                player.switch_to(choice)
+                                break
+                            else:
+                                self.log("Invalid choice. Try again.")
+                        except ValueError:
+                            self.log("Please enter a number.")
 
     def check_battle_end(self):
         if not self.player.has_available_pokemon() or not self.opponent.has_available_pokemon():
