@@ -73,11 +73,6 @@ def extract_level_up_moves(pokemon_data, move_lookup, level=50, version_group="h
             is_valid_version = version == version_group
             is_valid_level = learned_at <= level
 
-            print(f"move: {move_name}")
-            print(f"- version: {version}")
-            print(f"- level: {learned_at}")
-            print(f"-> is_level_up: {is_level_up}, is_valid_version: {is_valid_version}, is_valid_level: {is_valid_level}")
-
             if is_level_up and is_valid_version and is_valid_level:
                 move_obj = move_lookup.get(move_name)
                 if move_obj and move_obj not in selected_moves:

@@ -17,14 +17,49 @@ class BattleManager:
         self.battle_log.append(message)
         logging.info(message)
     
-    def make_ai_action(self, player, move):
-        return PlayerAction(type="move", move=move)
+    def make_ai_action(self, player, opponent):
+        best_move = None
+        best_score = float('-inf')
+        attacker = player.active_pokemon()
+        defender = opponent.active_pokemon()
+
+        for move in attacker.moves:
+            if not attacker.battle_stats.has_pp(move.name):
+                continue
+
+            score = 0
+            for defender_type in defender.types:
+                multiplier = get_type_multiplier(move.move_type, defender_type)
+                score += multiplier
+
+            if move.move_type in attacker.types:
+                score *= 1.5
+
+            if hasattr(move, "power") and move.power:
+                score *= move.power
+
+            print(f"Evaluating move: {move.name}, score: {score}")
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+        if best_move is None:
+            best_move = attacker.moves[0]
+
+        print(f"AI selected move: {best_move.name}")
+        return PlayerAction(type="move", move=best_move)
 
     def take_turn(self, player_action: PlayerAction, opponent_action: PlayerAction):
         if self.battle_over:
             return
         # Determine turn order
         first, second = self.determine_turn_order()
+
+        if self.player.is_ai:
+            player_action = self.make_ai_action(self.player, self.opponent)
+        if self.opponent.is_ai:
+            opponent_action = self.make_ai_action(self.opponent, self.player)
 
         first_action = player_action if first == self.player else opponent_action
         second_action = opponent_action if first == self.player else player_action

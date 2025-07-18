@@ -39,16 +39,15 @@ class BattleScene:
 
     def update(self):
         if self.selected_action:
-            ai_pokemon = self.battle_manager.opponent.active_pokemon()
-            ai_move = ai_pokemon.moves[0]
-            opponent_action = PlayerAction(type="move", move=ai_move)
+            opponent_action = self.battle_manager.make_ai_action(self.battle_manager.opponent, self.battle_manager.player)
+
 
             self.log_message(f"{self.battle_manager.player.active_pokemon().name} used {self.selected_action.move.name}!")
             self.draw()
             pygame.display.flip()
             time.sleep(1)
 
-            self.log_message(f"{ai_pokemon.name} used {ai_move.name}")
+            self.log_message(f"{self.battle_manager.opponent.active_pokemon().name} used {opponent_action.move.name}")
             self.draw()
             pygame.display.flip()
             time.sleep(1)
