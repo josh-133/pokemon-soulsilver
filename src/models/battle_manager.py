@@ -7,15 +7,18 @@ import random
 import logging
 
 class BattleManager:
-    def __init__(self, player: Player, opponent: Player):
+    def __init__(self, player: Player, opponent: Player, ui_logger=None):
         self.player = player
         self.opponent = opponent
         self.battle_log = []
         self.battle_over = False
+        self.ui_logger = ui_logger
 
     def log(self, message: str):
         self.battle_log.append(message)
         logging.info(message)
+        if hasattr(self, "ui_logger") and self.ui_logger:
+            self.ui_logger(message)
     
     def make_ai_action(self, player, opponent):
         best_move = None
@@ -127,16 +130,19 @@ class BattleManager:
                 pokemon.battle_stats.toxic_turns += 1
                 turns = pokemon.battle_stats.toxic_turns
                 damage = max(1, (pokemon.battle_stats.max_hp * turns) // 16)
-                pokemon.take_damage(damage)
                 self.log(f"{pokemon.name} is badly poisoned!")
             else:
                 damage = max(1, pokemon.battle_stats.max_hp // 8)
-                pokemon.take_damage(damage)
-            self.log(f"{pokemon.name} was hurt by poison!")
+                self.log(f"{pokemon.name} was hurt by poison!")
+            
+            pokemon.take_damage(damage)
+            self.log(f"It took {damage} damage.")  
+            
         elif status == "burn":
             damage = max(1, pokemon.battle_stats.max_hp // 16)
-            pokemon.take_damage(damage)
             self.log(f"{pokemon.name} was hurt by burn!")
+            pokemon.take_damage(damage)
+            self.log(f"It took {damage} damage.")
 
         self.apply_end_of_turn_status_effects(pokemon_list[1:])       
 
@@ -167,20 +173,32 @@ class BattleManager:
         self.apply_damage(attacker, defender, move)
 
         effects = move.effects_info
-        if effects and effects.ailment:     
-            if random.randint(1, 100) <= effects.ailment_chance:
-                target_stats = defender.active_pokemon().battle_stats
-                if effects.is_badly_poisoning:
-                    target_stats.status = "poison"
-                    target_stats.badly_poisoned = True
-                    target_stats.toxic_turns = 0
-                else:
-                    target_stats.apply_status(effects.ailment)
-        if effects and effects.stat_chance:
-            if hasattr(move, "stat_changes") and hasattr(move, "stat_chance"):
-                if random.randint(1, 100) <= move.effects_info.stat_chance:
-                    for stat, change in move.stat_changes.items():
-                        defender.active_pokemon().battle_stats.apply_stat_change(stat, change)
+        if effects:
+            # Ailment (e.g., poison, burn)
+            if effects.ailment and effects.ailment != "none":
+                if random.randint(1, 100) <= (effects.ailment_chance or 100):
+                    target = defender.active_pokemon().battle_stats
+                    if effects.is_badly_poisoning:
+                        target.status = "poison"
+                        target.badly_poisoned = True
+                        target.toxic_turns = 0
+                        self.log(f"{defender.active_pokemon().name} was badly poisoned!")
+                    else:
+                        if target.status is None:
+                            target.apply_status(effects.ailment)
+                            self.log(f"{defender.active_pokemon().name} was {effects.ailment}ed!")
+
+            # Stat changes (e.g., Swords Dance)
+            if effects.stat_changes:
+                target = defender if move.target == "opponent" else attacker
+                target_stats = target.active_pokemon().battle_stats
+
+                if effects.stat_chance is None or random.randint(1, 100) <= effects.stat_chance:
+                    for stat, change in effects.stat_changes.items():
+                        target_stats.apply_stat_change(stat, change)
+                        stage = "sharply " if abs(change) == 2 else ""
+                        direction = "rose" if change > 0 else "fell"
+                        self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
 
     def prompt_action_input(self, prompt_text, valid_options):
         choice = input(prompt_text)

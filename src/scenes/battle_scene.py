@@ -4,6 +4,14 @@ import logging
 from models.player_action import PlayerAction
 from models.type_colouring import TYPE_COLORS
 
+STATUS_COLORS = {
+    "paralysis": (255, 255, 0),   # Yellow
+    "burn": (255, 100, 0),        # Orange
+    "poison": (160, 64, 160),     # Purple
+    "sleep": (100, 100, 255),     # Blue
+    "freeze": (0, 200, 255),      # Cyan
+}
+
 class BattleScene:
     def __init__(self, screen, battle_manager):
         self.screen = screen
@@ -53,6 +61,21 @@ class BattleScene:
             time.sleep(1)
 
             self.battle_manager.take_turn(self.selected_action, opponent_action)
+
+            # Redraw after turns taken
+            self.draw()
+            pygame.display.flip()
+            time.sleep(1)
+
+            self.battle_manager.apply_end_of_turn_status_effects([
+                self.battle_manager.player.active_pokemon(), self.battle_manager.opponent.active_pokemon()
+            ])
+            
+
+            # Redraw after end-of-turn effects
+            self.draw()
+            pygame.display.flip()
+            time.sleep(1)
 
             self.selected_action = None
             self.ui_state = "main_menu"
@@ -121,11 +144,33 @@ class BattleScene:
         else:
             logging.info("RIP NO SPRITE")
         self.draw_text(pokemon.name, x + 10, y + 75)
+
+        status = pokemon.battle_stats.status
+        if status:
+            status_text = status.upper()[:3]
+            color = STATUS_COLORS.get(status, (128, 128, 128))
+
+            # Box settings
+            font = self.small_font if hasattr(self, "small_font") else self.font
+            text_surface = font.render(status_text, True, (255, 255, 255))
+            text_rect = text_surface.get_rect()
+
+            box_x = x + 10 + 100  # right of name
+            box_y = y + 75
+            box_width = text_rect.width + 8
+            box_height = text_rect.height + 4
+
+            pygame.draw.rect(self.screen, color, (box_x, box_y, box_width, box_height))
+            self.screen.blit(text_surface, (box_x + 4, box_y + 2))
     
     def draw_hp_bar(self, current_hp, max_hp, x, y, width=100, height=10):
         ratio = current_hp / max_hp
         pygame.draw.rect(self.screen, (255, 0, 0), (x, y, width, height))
         pygame.draw.rect(self.screen, (0, 255, 0), (x, y, width * ratio, height))
+
+        # Draw HP text
+        hp_text = f"{current_hp} / {max_hp} HP"
+        self.draw_text(hp_text, x, y + height + 5)
 
     def draw_text(self, text, x, y):
         text_surface = self.font.render(text, True, (0, 0, 0))
