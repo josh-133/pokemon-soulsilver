@@ -51,7 +51,7 @@ class BattleManager:
             best_move = attacker.moves[0]
 
         print(f"AI selected move: {best_move.name}")
-        return PlayerAction(type="move", move_name=best_move.name)
+        return PlayerAction(type="move", move=best_move)
 
     def take_turn(self, player_action: PlayerAction, opponent_action: PlayerAction):
         if self.battle_over:
@@ -62,24 +62,34 @@ class BattleManager:
         first_action = player_action if first == self.player else opponent_action
         second_action = opponent_action if first == self.player else player_action
 
-        # execute moves and handle faints if necessary
         move = first.active_pokemon().get_move_by_name(first_action.move_name)
         self.execute_move(first, second, move)
-        if (second.active_pokemon().is_fainted()):
+
+        if self.ui_logger:
+            self.ui_logger(f"{first.active_pokemon().name} used {first_action.move_name}")
+        
+        if second.active_pokemon().is_fainted():
             self.handle_faint(second)
-            
-            # check if battle is over
             if self.check_battle_end():
                 return
-        else:
-            move = second.active_pokemon().get_move_by_name(second_action.move_name)
-            self.execute_move(second, first, move)
-            if (first.active_pokemon().is_fainted()):
-                self.handle_faint(first)
+            
+        move = second.active_pokemon().get_move_by_name(second_action.move_name)
+        self.execute_move(second, first, move)
+            
+        if self.ui_logger:
+            self.ui_logger(f"{second.active_pokemon().name} used {second_action.move_name}")
+
+        if (first.active_pokemon().is_fainted()):
+            self.handle_faint(first)
 
         # check if battle is over
         if self.check_battle_end():
             return
+        
+        self.apply_end_of_turn_status_effects([
+            self.player.active_pokemon(),
+            self.opponent.active_pokemon()
+        ])
 
     def choose_best_counter(self, current_opponent_pokemon, player_active_pokemon):
         best_index = None
