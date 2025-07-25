@@ -33,6 +33,7 @@ class BattleStats:
         self.pp[move_name] = max_pp
 
     def use_pp(self, move_name: str):
+        print(f"Using PP for: {move_name}")
         if self.pp.get(move_name, 0) > 0:
             self.pp[move_name] -= 1
         else:

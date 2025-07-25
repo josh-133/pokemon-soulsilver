@@ -35,19 +35,19 @@ class BattleScene:
                 for i,rect in enumerate(self.move_buttons):
                     if rect.collidepoint(pos):
                         move = moves[i]
-                        self.selected_action = PlayerAction(type="move", move=move)
+                        self.selected_action = PlayerAction(type="move", move_name=move.name)
 
     def update(self):
         if self.selected_action:
             opponent_action = self.battle_manager.make_ai_action(self.battle_manager.opponent, self.battle_manager.player)
 
 
-            self.log_message(f"{self.battle_manager.player.active_pokemon().name} used {self.selected_action.move.name}!")
+            self.log_message(f"{self.battle_manager.player.active_pokemon().name} used {self.selected_action.move_name}!")
             self.draw()
             pygame.display.flip()
             time.sleep(1)
 
-            self.log_message(f"{self.battle_manager.opponent.active_pokemon().name} used {opponent_action.move.name}")
+            self.log_message(f"{self.battle_manager.opponent.active_pokemon().name} used {opponent_action.move_name}")
             self.draw()
             pygame.display.flip()
             time.sleep(1)

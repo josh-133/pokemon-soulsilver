@@ -48,7 +48,7 @@ class BattleManager:
             best_move = attacker.moves[0]
 
         print(f"AI selected move: {best_move.name}")
-        return PlayerAction(type="move", move=best_move)
+        return PlayerAction(type="move", move_name=best_move.name)
 
     def take_turn(self, player_action: PlayerAction, opponent_action: PlayerAction):
         if self.battle_over:
@@ -56,16 +56,12 @@ class BattleManager:
         # Determine turn order
         first, second = self.determine_turn_order()
 
-        if self.player.is_ai:
-            player_action = self.make_ai_action(self.player, self.opponent)
-        if self.opponent.is_ai:
-            opponent_action = self.make_ai_action(self.opponent, self.player)
-
         first_action = player_action if first == self.player else opponent_action
         second_action = opponent_action if first == self.player else player_action
 
         # execute moves and handle faints if necessary
-        self.execute_move(first, second, first_action.move)
+        move = first.active_pokemon().get_move_by_name(first_action.move_name)
+        self.execute_move(first, second, move)
         if (second.active_pokemon().is_fainted()):
             self.handle_faint(second)
             
@@ -73,7 +69,8 @@ class BattleManager:
             if self.check_battle_end():
                 return
         else:
-            self.execute_move(second, first, second_action.move)
+            move = second.active_pokemon().get_move_by_name(second_action.move_name)
+            self.execute_move(second, first, move)
             if (first.active_pokemon().is_fainted()):
                 self.handle_faint(first)
 
@@ -147,6 +144,8 @@ class BattleManager:
         if not attacker.active_pokemon().battle_stats.has_pp(move.name):
             self.log(f"{attacker.active_pokemon().name} has no PP left for {move.name}")
             return
+        
+        print(f"Executing move: {move.name}")
 
         if move.accuracy is not None:
             attacker_accuracy_stage = attacker.active_pokemon().battle_stats.stat_modifiers.get("accuracy", 0)
@@ -160,6 +159,9 @@ class BattleManager:
                 self.log(f"{attacker.active_pokemon().name}'s {move.name} missed!")
                 return 0
         
+        print("PP map before:", attacker.active_pokemon().battle_stats.pp)
+        print("Move used:", move.name)
+        print("Is move in PP map?", move.name in attacker.active_pokemon().battle_stats.pp)
         # Use PP and apply damage
         attacker.active_pokemon().battle_stats.use_pp(move.name)
         self.apply_damage(attacker, defender, move)

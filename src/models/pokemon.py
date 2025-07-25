@@ -57,6 +57,12 @@ class Pokemon:
             "sp_defense": 0,
             "speed": 0
         }
+    
+    def get_move_by_name(self, move_name):
+        for move in self.moves:
+            if move.name == move_name:
+                return move
+        return None
 
     def calculate_stats(self):
         def calc(stat, is_hp=False):
