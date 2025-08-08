@@ -183,6 +183,28 @@ class BattleManager:
             return self.opponent
         return None       
 
+    def check_status_prevents_move(self, attacker):
+        """Check if status effects prevent the pokemon from using a move, return (can_move, status_message)"""
+        attacker_status = attacker.active_pokemon().battle_stats.status
+        
+        # Sleep check
+        if attacker_status == "sleep":
+            # Decrement sleep turns
+            attacker.active_pokemon().battle_stats.sleep_turns -= 1
+            if attacker.active_pokemon().battle_stats.sleep_turns <= 0:
+                attacker.active_pokemon().battle_stats.status = None
+                attacker.active_pokemon().battle_stats.sleep_turns = 0
+                return True, f"{attacker.active_pokemon().name} woke up!"
+            else:
+                return False, f"{attacker.active_pokemon().name} is fast asleep!"
+        
+        # Paralysis check (25% chance to be fully paralyzed and unable to move)
+        if attacker_status == "paralysis":
+            if random.randint(1, 4) == 1:  # 25% chance
+                return False, f"{attacker.active_pokemon().name} is paralyzed! It can't move!"
+        
+        return True, None
+
     def execute_move_calculate_only(self, attacker, defender, move: Move):
         """Execute move calculations without applying damage immediately"""
         if not attacker.active_pokemon().battle_stats.has_pp(move.name):
@@ -234,6 +256,9 @@ class BattleManager:
                     else:
                         if target.status is None:
                             target.apply_status(effects.ailment)
+                            # Set sleep turns for sleep status
+                            if effects.ailment == "sleep":
+                                target.sleep_turns = random.randint(1, 3)  # Sleep for 1-3 turns in Gen IV
                             self.log(f"{defender.active_pokemon().name} was {effects.ailment}ed!")
                             print(f"Status applied: {target.status}")
                         else:

@@ -42,13 +42,13 @@ class Move:
     def calculate_critical_hit_chance(self, attacker):
         crit_stage = self.crit_rate or 0
         
-        # Generation 4 critical hit rates (temporarily increased for testing)
+        # Generation 4 critical hit rates
         crit_rates = {
-            0: 1/4,    # 25% (normal) - TEMPORARY FOR TESTING
-            1: 1/2,    # 50% (high crit moves like Slash) - TEMPORARY FOR TESTING
-            2: 3/4,    # 75% (Focus Energy + high crit move) - TEMPORARY FOR TESTING
-            3: 7/8,    # 87.5% - TEMPORARY FOR TESTING
-            4: 15/16,  # 93.75% - TEMPORARY FOR TESTING
+            0: 1/16,   # 6.25% (normal)
+            1: 1/8,    # 12.5% (high crit moves like Slash)
+            2: 1/4,    # 25% (Focus Energy + high crit move)
+            3: 1/3,    # 33.3%
+            4: 1/2,    # 50%
         }
         
         # Cap at stage 4

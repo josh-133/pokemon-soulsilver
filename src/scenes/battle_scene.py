@@ -97,10 +97,30 @@ class BattleScene:
 
         elif self.turn_state == "first_move" and current_time >= self.action_timer:
             if self.first_action and self.first_action.move:
-                self.log_message(f"{self.first.active_pokemon().name} used {self.first_action.move.name}!")
-                self.draw(); pygame.display.flip()
-                self.action_timer = current_time + 1
-                self.turn_state = "first_damage_anim"
+                # Check if status effects prevent the move
+                can_move, status_message = self.battle_manager.check_status_prevents_move(self.first)
+                
+                if not can_move:
+                    # Status prevents move - show status message instead of move name
+                    self.log_message(status_message)
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "second_move"  # Skip to opponent's turn
+                elif status_message:
+                    # Pokemon woke up - show wake up message then move name
+                    self.log_message(status_message)
+                    self.draw(); pygame.display.flip()
+                    pygame.time.delay(800)
+                    self.log_message(f"{self.first.active_pokemon().name} used {self.first_action.move.name}!")
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "first_damage_anim"
+                else:
+                    # Normal move execution
+                    self.log_message(f"{self.first.active_pokemon().name} used {self.first_action.move.name}!")
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "first_damage_anim"
             else:
                 self.turn_state = "start"
             return
@@ -173,10 +193,30 @@ class BattleScene:
 
         elif self.turn_state == "second_move" and current_time >= self.action_timer:
             if self.second_action and self.second_action.move:
-                self.log_message(f"{self.second.active_pokemon().name} used {self.second_action.move.name}!")
-                self.draw(); pygame.display.flip()
-                self.action_timer = current_time + 1
-                self.turn_state = "second_damage_anim"
+                # Check if status effects prevent the move
+                can_move, status_message = self.battle_manager.check_status_prevents_move(self.second)
+                
+                if not can_move:
+                    # Status prevents move - show status message instead of move name
+                    self.log_message(status_message)
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "status"  # Skip to status effects
+                elif status_message:
+                    # Pokemon woke up - show wake up message then move name
+                    self.log_message(status_message)
+                    self.draw(); pygame.display.flip()
+                    pygame.time.delay(800)
+                    self.log_message(f"{self.second.active_pokemon().name} used {self.second_action.move.name}!")
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "second_damage_anim"
+                else:
+                    # Normal move execution
+                    self.log_message(f"{self.second.active_pokemon().name} used {self.second_action.move.name}!")
+                    self.draw(); pygame.display.flip()
+                    self.action_timer = current_time + 1
+                    self.turn_state = "second_damage_anim"
             else:
                 self.turn_state = "start"
             return
