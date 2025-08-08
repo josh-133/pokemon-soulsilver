@@ -26,7 +26,7 @@ def create_test_pokemon(name="TestMon", level=50, hp=100, attack=50, defense=50,
         types=types,
         moves=moves,
         level=level,
-        iv=Pokemon.generate_default_iv(),
+        iv=Pokemon.generate_random_iv(),
         ev=Pokemon.generate_default_ev(),
         front_sprite=None,
         back_sprite=None
