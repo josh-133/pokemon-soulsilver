@@ -57,7 +57,7 @@ class BattleManager:
         if self.battle_over:
             return
         # Determine turn order
-        first, second = self.determine_turn_order()
+        first, second = self.determine_turn_order(player_action, opponent_action)
 
         first_action = player_action if first == self.player else opponent_action
         second_action = opponent_action if first == self.player else player_action
@@ -108,11 +108,23 @@ class BattleManager:
                     best_index = i
         return best_index
     
-    def determine_turn_order(self):
-        player_speed = self.player.active_pokemon().battle_stats.get_effective_stat("speed")
-        opponent_speed = self.opponent.active_pokemon().battle_stats.get_effective_stat("speed")
-
-        return (self.player, self.opponent) if player_speed >= opponent_speed else (self.opponent, self.player)
+    def determine_turn_order(self, player_action=None, opponent_action=None):
+        player_priority = 0
+        opponent_priority = 0
+        
+        if player_action and player_action.move and hasattr(player_action.move, 'priority'):
+            player_priority = player_action.move.priority or 0
+        if opponent_action and opponent_action.move and hasattr(opponent_action.move, 'priority'):
+            opponent_priority = opponent_action.move.priority or 0
+        
+        if player_priority > opponent_priority:
+            return (self.player, self.opponent)
+        elif opponent_priority > player_priority:
+            return (self.opponent, self.player)
+        else:
+            player_speed = self.player.active_pokemon().battle_stats.get_effective_stat("speed")
+            opponent_speed = self.opponent.active_pokemon().battle_stats.get_effective_stat("speed")
+            return (self.player, self.opponent) if player_speed >= opponent_speed else (self.opponent, self.player)
 
     def resolve_action(self, actor, opponent, action: PlayerAction):
         if action.type == "move":
@@ -132,34 +144,50 @@ class BattleManager:
 
     def apply_end_of_turn_status_effects(self, pokemon_list):
         if not pokemon_list:
-            return
+            return []
         pokemon = pokemon_list[0]
         status = pokemon.battle_stats.status
+        status_effects = []
+        
+        print(f"Checking end-of-turn effects for {pokemon.name}, status: {status}")
+        
         if status == "poison":
             if pokemon.battle_stats.badly_poisoned:
                 pokemon.battle_stats.toxic_turns += 1
                 turns = pokemon.battle_stats.toxic_turns
                 damage = max(1, (pokemon.battle_stats.max_hp * turns) // 16)
-                self.log(f"{pokemon.name} is badly poisoned!")
+                message = f"{pokemon.name} is badly poisoned!"
             else:
                 damage = max(1, pokemon.battle_stats.max_hp // 8)
-                self.log(f"{pokemon.name} was hurt by poison!")
+                message = f"{pokemon.name} was hurt by poison!"
             
-            pokemon.take_damage(damage)
-            self.log(f"It took {damage} damage.")  
+            new_hp = max(0, pokemon.battle_stats.current_hp - damage)
+            status_effects.append((self.get_pokemon_owner(pokemon), new_hp, message))
+            status_effects.append((self.get_pokemon_owner(pokemon), new_hp, f"It took {damage} damage."))
             
         elif status == "burn":
             damage = max(1, pokemon.battle_stats.max_hp // 16)
-            self.log(f"{pokemon.name} was hurt by burn!")
-            pokemon.take_damage(damage)
-            self.log(f"It took {damage} damage.")
+            message = f"{pokemon.name} was hurt by burn!"
+            new_hp = max(0, pokemon.battle_stats.current_hp - damage)
+            status_effects.append((self.get_pokemon_owner(pokemon), new_hp, message))
+            status_effects.append((self.get_pokemon_owner(pokemon), new_hp, f"It took {damage} damage."))
 
-        self.apply_end_of_turn_status_effects(pokemon_list[1:])       
+        status_effects.extend(self.apply_end_of_turn_status_effects(pokemon_list[1:]))
+        return status_effects
+    
+    def get_pokemon_owner(self, pokemon):
+        """Helper method to find which player owns a pokemon"""
+        if self.player.active_pokemon() == pokemon:
+            return self.player
+        elif self.opponent.active_pokemon() == pokemon:
+            return self.opponent
+        return None       
 
-    def execute_move(self, attacker, defender, move: Move):
+    def execute_move_calculate_only(self, attacker, defender, move: Move):
+        """Execute move calculations without applying damage immediately"""
         if not attacker.active_pokemon().battle_stats.has_pp(move.name):
             self.log(f"{attacker.active_pokemon().name} has no PP left for {move.name}")
-            return
+            return None, False, False
         
         print(f"Executing move: {move.name}")
 
@@ -173,21 +201,31 @@ class BattleManager:
             final_accuracy = move.accuracy * acc_mod / eva_mod
             if random.random() * 100 > final_accuracy:
                 self.log(f"{attacker.active_pokemon().name}'s {move.name} missed!")
-                return 0
+                return None, False, True
         
         print("PP map before:", attacker.active_pokemon().battle_stats.pp)
         print("Move used:", move.name)
         print("Is move in PP map?", move.name in attacker.active_pokemon().battle_stats.pp)
-        # Use PP and apply damage
+        # Use PP but don't apply damage yet
         attacker.active_pokemon().battle_stats.use_pp(move.name)
-        self.apply_damage(attacker, defender, move)
+        damage, is_critical = self.calculate_damage(attacker, defender, move)
 
+        return damage, is_critical, False
+
+    def apply_move_effects(self, attacker, defender, move: Move):
+        """Apply non-damage effects of a move (status effects, stat changes)"""
         effects = move.effects_info
+        print(f"Checking move effects for {move.name}: {effects}")
         if effects:
             # Ailment (e.g., poison, burn)
             if effects.ailment and effects.ailment != "none":
-                if random.randint(1, 100) <= (effects.ailment_chance or 100):
+                ailment_chance = effects.ailment_chance or 100
+                roll = random.randint(1, 100)
+                print(f"Status effect check: {move.name} has {effects.ailment} with {ailment_chance}% chance, rolled {roll}")
+                # Temporarily increase chance to 100% for testing
+                if roll <= 100:  # Was: ailment_chance
                     target = defender.active_pokemon().battle_stats
+                    print(f"Applying status {effects.ailment} to {defender.active_pokemon().name}")
                     if effects.is_badly_poisoning:
                         target.status = "poison"
                         target.badly_poisoned = True
@@ -197,6 +235,9 @@ class BattleManager:
                         if target.status is None:
                             target.apply_status(effects.ailment)
                             self.log(f"{defender.active_pokemon().name} was {effects.ailment}ed!")
+                            print(f"Status applied: {target.status}")
+                        else:
+                            print(f"Status not applied - {defender.active_pokemon().name} already has status: {target.status}")
 
             # Stat changes (e.g., Swords Dance)
             if effects.stat_changes:
@@ -210,6 +251,20 @@ class BattleManager:
                         direction = "rose" if change > 0 else "fell"
                         self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
 
+    def execute_move(self, attacker, defender, move: Move):
+        damage, is_critical, missed = self.execute_move_calculate_only(attacker, defender, move)
+        
+        if missed or damage is None:
+            return
+            
+        # Apply damage and effects immediately (original behavior)
+        ability = defender.active_pokemon().ability
+        if hasattr(ability, "on_damage_taken"):
+            ability.on_damage_taken(attacker.active_pokemon(), defender.active_pokemon(), move, damage)
+
+        self.apply_calculated_damage(attacker, defender, move, damage, is_critical)
+        self.apply_move_effects(attacker, defender, move)
+
     def prompt_action_input(self, prompt_text, valid_options):
         choice = input(prompt_text)
         if choice not in valid_options:
@@ -217,14 +272,13 @@ class BattleManager:
             return self.prompt_action_input(prompt_text, valid_options)
         return choice
 
-    def apply_damage(self, attacker, defender, move):
-        damage = Move.apply_damage(move, attacker.active_pokemon(), defender.active_pokemon())
+    def calculate_damage(self, attacker, defender, move):
+        """Calculate damage without applying it or logging messages"""
+        damage, is_critical = move.apply_damage(attacker.active_pokemon(), defender.active_pokemon())
 
         ability = defender.active_pokemon().ability
         if hasattr(ability, "modify_damage"):
             damage = ability.modify_damage(attacker.active_pokemon(), defender.active_pokemon(), move, damage)
-        if hasattr(ability, "on_damage_taken"):
-            ability.on_damage_taken(attacker.active_pokemon(), defender.active_pokemon(), move, damage)
 
         if (
             move.damage_class == "Physical"
@@ -232,11 +286,33 @@ class BattleManager:
             and attacker.active_pokemon().battle_stats.status != "Guts"
         ):
             damage = damage // 2
+
+        return damage, is_critical
+
+    def apply_calculated_damage(self, attacker, defender, move, damage, is_critical, skip_damage_application=False, skip_crit_message=False):
+        """Apply pre-calculated damage and log appropriate messages"""
+        if (
+            move.damage_class == "Physical"
+            and attacker.active_pokemon().battle_stats.status == "burn"
+            and attacker.active_pokemon().battle_stats.status != "Guts"
+        ):
             self.log(f"{attacker.active_pokemon().name}'s attack was halved due to burn!")
 
-        self.log(f"{attacker.active_pokemon().name} used {move.name}!")
-        defender.active_pokemon().take_damage(damage)
+        if is_critical and not skip_crit_message:
+            self.log("A critical hit!")
+        
+        if not skip_damage_application:
+            defender.active_pokemon().take_damage(damage)
         self.log(f"It dealt {damage} damage to {defender.active_pokemon().name}.")
+
+    def apply_damage(self, attacker, defender, move):
+        damage, is_critical = self.calculate_damage(attacker, defender, move)
+        
+        ability = defender.active_pokemon().ability
+        if hasattr(ability, "on_damage_taken"):
+            ability.on_damage_taken(attacker.active_pokemon(), defender.active_pokemon(), move, damage)
+
+        self.apply_calculated_damage(attacker, defender, move, damage, is_critical)
 
     def handle_faint(self, player):
         if player.active_pokemon().is_fainted():
