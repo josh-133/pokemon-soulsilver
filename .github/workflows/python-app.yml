@@ -1,8 +1,11 @@
 name: Python application
 
 on:
-  push: {}
-  pull_request: {}
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -29,6 +32,16 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+    - name: Run unit tests
       run: |
-        pytest tests
+        pytest tests/unit/ -v --tb=short --cov=src/models --cov-report=term
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v --tb=short --cov=src/models --cov-append --cov-report=term
+    - name: Run legacy tests (if any)
+      run: |
+        if [ -d "tests" ] && [ "$(find tests -maxdepth 1 -name "test_*.py" -type f | wc -l)" -gt 0 ]; then
+          pytest tests/test_*.py -v --tb=short
+        else
+          echo "No legacy tests found"
+        fi

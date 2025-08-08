@@ -308,9 +308,11 @@ class BattleManager:
         if (
             move.damage_class == "Physical"
             and attacker.active_pokemon().battle_stats.status == "burn"
-            and attacker.active_pokemon().battle_stats.status != "Guts"
         ):
-            damage = damage // 2
+            # Check if Pokemon has Guts ability (which prevents burn attack reduction)
+            has_guts = hasattr(attacker.active_pokemon().ability, 'name') and attacker.active_pokemon().ability.name == "Guts"
+            if not has_guts:
+                damage = damage // 2
 
         return damage, is_critical
 
@@ -319,9 +321,11 @@ class BattleManager:
         if (
             move.damage_class == "Physical"
             and attacker.active_pokemon().battle_stats.status == "burn"
-            and attacker.active_pokemon().battle_stats.status != "Guts"
         ):
-            self.log(f"{attacker.active_pokemon().name}'s attack was halved due to burn!")
+            # Check if Pokemon has Guts ability (which prevents burn attack reduction)
+            has_guts = hasattr(attacker.active_pokemon().ability, 'name') and attacker.active_pokemon().ability.name == "Guts"
+            if not has_guts:
+                self.log(f"{attacker.active_pokemon().name}'s attack was halved due to burn!")
 
         if is_critical and not skip_crit_message:
             self.log("A critical hit!")
