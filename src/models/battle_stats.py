@@ -19,6 +19,7 @@ class BattleStats:
         self.status = None
         self.badly_poisoned = False
         self.toxic_turns = 0
+        self.sleep_turns = 0
         self.pp = {move.name: move.pp for move in pokemon.moves}
         self.stat_modifiers = {stat: 0 for stat in self.battle_stats}
 
@@ -33,6 +34,7 @@ class BattleStats:
         self.pp[move_name] = max_pp
 
     def use_pp(self, move_name: str):
+        print(f"Using PP for: {move_name}")
         if self.pp.get(move_name, 0) > 0:
             self.pp[move_name] -= 1
         else:
@@ -63,7 +65,14 @@ class BattleStats:
         base = self.battle_stats[stat_name]
         stage = self.stat_modifiers[stat_name]
         multiplier = self.get_stage_multiplier(stage)
-        return int(base * multiplier)
+        stat_value = int(base * multiplier)
+        
+        # Apply status effects
+        if stat_name == "speed" and self.status == "paralysis":
+            # Paralysis reduces speed to 25% of normal
+            stat_value = int(stat_value * 0.25)
+            
+        return stat_value
 
     def get_stage_multiplier(self, stage: int) -> float:
         if stage >= 0:

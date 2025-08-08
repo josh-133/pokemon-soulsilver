@@ -15,6 +15,11 @@ with open(os.path.join(base_dir, "moves.json"), "r") as f:
     MOVES_DATA = json.load(f)
 
 def load_move(move_data):
+    parsed_stat_changes = {}
+    for change in move_data.get("stat_changes", []):
+        stat_name = change["stat"]["name"]
+        parsed_stat_changes[stat_name] = change["change"]
+
     effects_info = MoveEffects(
         effect_chance = move_data["effect_chance"],
         ailment = move_data["meta"]["ailment"],
@@ -23,7 +28,8 @@ def load_move(move_data):
         ailment_chance = move_data["meta"]["ailment_chance"],
         flinch_chance = move_data["meta"]["flinch_chance"],
         stat_chance = move_data["meta"]["stat_chance"],
-        is_badly_poisoning = ["is_badly_poisoning"],
+        stat_changes= parsed_stat_changes,
+        is_badly_poisoning = False,
     )
 
     if move_data["name"].lower() == "toxic":
@@ -44,6 +50,7 @@ def load_move(move_data):
         power = move_data["power"],
         damage_class = move_data["damage_class"],
         crit_rate = move_data["meta"]["crit_rate"],
+        target = move_data["target"],
         category = move_data["meta"]["category"],
         move_type = Type[move_data["type"].upper()],
         hit_info = hit_info,
@@ -72,11 +79,6 @@ def extract_level_up_moves(pokemon_data, move_lookup, level=50, version_group="h
             is_level_up = method == "level-up"
             is_valid_version = version == version_group
             is_valid_level = learned_at <= level
-
-            print(f"move: {move_name}")
-            print(f"- version: {version}")
-            print(f"- level: {learned_at}")
-            print(f"-> is_level_up: {is_level_up}, is_valid_version: {is_valid_version}, is_valid_level: {is_valid_level}")
 
             if is_level_up and is_valid_version and is_valid_level:
                 move_obj = move_lookup.get(move_name)

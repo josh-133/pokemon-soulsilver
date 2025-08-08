@@ -18,7 +18,7 @@ class Player:
     
     # switch a pokemon in battle
     def switch_to(self, index: int):
-        if self.team[index].current_hp > 0:
+        if self.team[index].battle_stats.current_hp > 0:
             self.active_index = index
             p = self.active_pokemon()
             if p.battle_stats.status == "poison":

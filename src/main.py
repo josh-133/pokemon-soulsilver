@@ -41,6 +41,7 @@ def on_pokemon_selected(team_data):
 
     battle_manager = BattleManager(player, opponent)
     scene = BattleScene(screen, battle_manager)
+    battle_manager.ui_logger = scene.log_message
     run_game_loop(scene)
 
 select_scene = PokemonSelectScene(screen, pokemon_data, on_pokemon_selected)
