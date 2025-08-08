@@ -114,5 +114,13 @@ class Move:
         # Apply critical hit multiplier
         if is_critical:
             damage = int(damage * 2)
+            
+        # Apply burn damage reduction for physical moves
+        if (self.damage_class == "Physical" and 
+            attacker.battle_stats.status == "burn"):
+            # Check if Pokemon has Guts ability (which prevents burn attack reduction)
+            has_guts = hasattr(attacker.ability, 'name') and attacker.ability.name == "Guts"
+            if not has_guts:
+                damage = damage // 2
 
         return max(1, damage), is_critical
