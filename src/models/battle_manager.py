@@ -241,11 +241,11 @@ class BattleManager:
         if effects:
             # Ailment (e.g., poison, burn)
             if effects.ailment and effects.ailment != "none":
-                ailment_chance = effects.ailment_chance or 100
+                ailment_chance = effects.ailment_chance
                 roll = random.randint(1, 100)
                 print(f"Status effect check: {move.name} has {effects.ailment} with {ailment_chance}% chance, rolled {roll}")
                 # Temporarily increase chance to 100% for testing
-                if roll <= 100:  # Was: ailment_chance
+                if roll <= ailment_chance:
                     target = defender.active_pokemon().battle_stats
                     print(f"Applying status {effects.ailment} to {defender.active_pokemon().name}")
                     if effects.is_badly_poisoning:
@@ -276,6 +276,14 @@ class BattleManager:
                         direction = "rose" if change > 0 else "fell"
                         self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
 
+    def calculate_type_effectiveness(self, move_type, defender):
+        """Calculate the total type effectiveness multiplier for a move against the defender."""
+        multiplier = 1.0
+        print(defender)
+        for defender_type in defender:
+            multiplier *= get_type_multiplier(move_type, defender_type)
+        return multiplier
+
     def execute_move(self, attacker, defender, move: Move):
         damage, is_critical, missed = self.execute_move_calculate_only(attacker, defender, move)
         
@@ -288,6 +296,16 @@ class BattleManager:
             ability.on_damage_taken(attacker.active_pokemon(), defender.active_pokemon(), move, damage)
 
         self.apply_calculated_damage(attacker, defender, move, damage, is_critical)
+
+        # Type effectiveness logging
+        multiplier = self.calculate_type_effectiveness(move.move_type, defender)
+        if multiplier > 1:
+            self.log("It's super effective!")
+        elif multiplier < 1 and multiplier > 0:
+            self.log("It's not very effective...")
+        elif multiplier == 0:
+            self.log("It had no effect...")
+
         self.apply_move_effects(attacker, defender, move)
 
     def prompt_action_input(self, prompt_text, valid_options):
@@ -332,7 +350,6 @@ class BattleManager:
         
         if not skip_damage_application:
             defender.active_pokemon().take_damage(damage)
-        self.log(f"It dealt {damage} damage to {defender.active_pokemon().name}.")
 
     def apply_damage(self, attacker, defender, move):
         damage, is_critical = self.calculate_damage(attacker, defender, move)

@@ -132,7 +132,24 @@ class BattleScene:
                 # Calculate move damage without applying it
                 damage, is_critical, missed = self.battle_manager.execute_move_calculate_only(
                     self.first, self.second, self.first_action.move)
-                
+
+                # --- TYPE EFFECTIVENESS LOGGING ---
+                effectiveness = self.battle_manager.calculate_type_effectiveness(
+                    self.first_action.move.move_type,
+                    self.second.active_pokemon().types
+                )
+                if effectiveness > 1:
+                    self.log_message("It's super effective!")
+                    self.draw()
+                    pygame.display.flip()
+                    pygame.time.delay(800)
+                elif effectiveness > 0 and effectiveness < 1:
+                    self.log_message("It's not very effective...")
+                    self.draw()
+                    pygame.display.flip()
+                    pygame.time.delay(800)
+                # --- END TYPE EFFECTIVENESS LOGGING ---
+
                 if missed or damage is None:
                     self.turn_state = "second_move"
                     self.action_timer = current_time + 1
@@ -228,7 +245,24 @@ class BattleScene:
                 # Calculate move damage without applying it
                 damage, is_critical, missed = self.battle_manager.execute_move_calculate_only(
                     self.second, self.first, self.second_action.move)
-                
+
+                # --- TYPE EFFECTIVENESS LOGGING ---
+                effectiveness = self.battle_manager.calculate_type_effectiveness(
+                    self.second_action.move.move_type,
+                    self.first.active_pokemon().types
+                )
+                if effectiveness > 1:
+                    self.log_message("It's super effective!")
+                    self.draw()
+                    pygame.display.flip()
+                    pygame.time.delay(800)
+                elif effectiveness > 0 and effectiveness < 1:
+                    self.log_message("It's not very effective...")
+                    self.draw()
+                    pygame.display.flip()
+                    pygame.time.delay(800)
+                # --- END TYPE EFFECTIVENESS LOGGING ---
+
                 if missed or damage is None:
                     self.turn_state = "status"
                     self.action_timer = current_time + 1
@@ -404,6 +438,12 @@ class BattleScene:
         ratio = current_hp / max_hp
         pygame.draw.rect(self.screen, (255, 0, 0), (x, y, width, height))
         pygame.draw.rect(self.screen, (0, 255, 0), (x, y, width * ratio, height))
+        # Draw numeric HP value below the bar, centered
+        hp_text = f"{current_hp}/{max_hp}"
+        text_width, text_height = self.font.size(hp_text)
+        text_x = x + (width - text_width) // 2
+        text_y = y + height + 4
+        self.draw_text(hp_text, text_x, text_y)
 
     def draw_text(self, text, x, y):
         text_surface = self.font.render(text, True, (0, 0, 0))
