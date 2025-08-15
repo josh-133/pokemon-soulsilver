@@ -266,20 +266,24 @@ class BattleManager:
 
             # Stat changes (e.g., Swords Dance)
             if effects.stat_changes:
-                target = defender if move.target == "opponent" else attacker
+                if move.target in ["opponent", "all-opponents"]:
+                    target = defender
+                else:
+                    target = attacker
+
                 target_stats = target.active_pokemon().battle_stats
 
-                if effects.stat_chance is None or random.randint(1, 100) <= effects.stat_chance:
-                    for stat, change in effects.stat_changes.items():
-                        target_stats.apply_stat_change(stat, change)
-                        stage = "sharply " if abs(change) == 2 else ""
-                        direction = "rose" if change > 0 else "fell"
-                        self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
+                print(f"EFFECTS STAT CHANCE: {effects.stat_chance}")
+
+                for stat, change in effects.stat_changes.items():
+                    target_stats.apply_stat_change(stat, change)
+                    stage = "sharply " if abs(change) == 2 else ""
+                    direction = "rose" if change > 0 else "fell"
+                    self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
 
     def calculate_type_effectiveness(self, move_type, defender):
         """Calculate the total type effectiveness multiplier for a move against the defender."""
         multiplier = 1.0
-        print(defender)
         for defender_type in defender:
             multiplier *= get_type_multiplier(move_type, defender_type)
         return multiplier
