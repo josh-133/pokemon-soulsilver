@@ -167,7 +167,6 @@ class TestBattleFlow:
         initial_log_length = len(battle.battle_log)
         
         # Execute a move and check if messages are logged
-        charizard = battle.player.active_pokemon()
         ember = charizard.get_move_by_name("Ember")
         
         battle.execute_move(battle.player, battle.opponent, ember)
