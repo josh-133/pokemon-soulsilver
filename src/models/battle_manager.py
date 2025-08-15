@@ -271,15 +271,15 @@ class BattleManager:
                 else:
                     target = attacker
 
-                target_stats = target.active_pokemon().battle_stats
-
-                print(f"EFFECTS STAT CHANCE: {effects.stat_chance}")
-
-                for stat, change in effects.stat_changes.items():
-                    target_stats.apply_stat_change(stat, change)
-                    stage = "sharply " if abs(change) == 2 else ""
-                    direction = "rose" if change > 0 else "fell"
-                    self.log(f"{target.active_pokemon().name}'s {stat.capitalize()} {stage}{direction}!")
+                targets = [target.active_pokemon()]
+                
+                for t in targets:
+                    target_stats = t.battle_stats
+                    for stat, change in effects.stat_changes.items():
+                        target_stats.apply_stat_change(stat, change)
+                        stage = "sharply " if abs(change) == 2 else ""
+                        direction = "rose" if change > 0 else "fell"
+                        self.log(f"{t.name}'s {stat.capitalize()} {stage}{direction}!")
 
     def calculate_type_effectiveness(self, move_type, defender):
         """Calculate the total type effectiveness multiplier for a move against the defender."""
