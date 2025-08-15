@@ -279,7 +279,7 @@ class BattleManager:
                         target_stats.apply_stat_change(stat, change)
                         stage = "sharply " if abs(change) == 2 else ""
                         direction = "rose" if change > 0 else "fell"
-                        self.log(f"{t.name}'s {stat.capitalize()} {stage}{direction}!")
+                        # self.log(f"{t.name}'s {stat.capitalize()} {stage}{direction}!")
 
     def calculate_type_effectiveness(self, move_type, defender):
         """Calculate the total type effectiveness multiplier for a move against the defender."""
